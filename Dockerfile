@@ -3,7 +3,7 @@ FROM --platform=linux/amd64 golang:1.21 AS builder
 WORKDIR /build
 
 # 先复制依赖文件，利用 Docker 缓存
-COPY go.mod go.sum ./
+COPY go.mod go.sum* ./
 RUN go mod download
 
 # 再复制源代码
@@ -12,16 +12,15 @@ COPY config/ ./config/
 COPY models/ ./models/
 COPY handlers/ ./handlers/
 
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o effihub .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o effihub .
 
-FROM --platform=linux/amd64 debian:bookworm-slim
+FROM --platform=linux/amd64 alpine:latest
 
 WORKDIR /app
 
 # 安装必要工具和非 root 用户
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata wget && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    useradd -m -u 1000 appuser
+RUN apk add --no-cache ca-certificates tzdata wget && \
+    addgroup -S appuser && adduser -S appuser -G appuser
 
 COPY --from=builder /build/effihub ./
 COPY static/ ./static/

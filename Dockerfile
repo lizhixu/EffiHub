@@ -19,8 +19,7 @@ FROM --platform=linux/amd64 alpine:3.19
 WORKDIR /app
 
 # 安装必要工具和非 root 用户
-RUN apk add --no-cache ca-certificates tzdata wget && \
-    adduser -D -u 1000 appuser
+RUN apk add --no-cache ca-certificates tzdata wget && adduser -D -u 1000 appuser
 
 COPY --from=builder /build/effihub ./
 COPY static/ ./static/

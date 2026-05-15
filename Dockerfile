@@ -1,6 +1,4 @@
-FROM --platform=linux/amd64 golang:1.21-alpine AS builder
-
-RUN apk add --no-cache gcc musl-dev
+FROM --platform=linux/amd64 golang:1.21 AS builder
 
 WORKDIR /build
 
@@ -14,14 +12,16 @@ COPY config/ ./config/
 COPY models/ ./models/
 COPY handlers/ ./handlers/
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o effihub .
+RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o effihub .
 
-FROM --platform=linux/amd64 alpine:3.19
+FROM --platform=linux/amd64 debian:bookworm-slim
 
 WORKDIR /app
 
 # 安装必要工具和非 root 用户
-RUN apk add --no-cache ca-certificates tzdata wget && adduser -D -u 1000 appuser
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata wget && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    useradd -m -u 1000 appuser
 
 COPY --from=builder /build/effihub ./
 COPY static/ ./static/

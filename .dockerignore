@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+*_test.go
+test/
+tests/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# IDE files
+*.iml
+
+# Temp files
+*.log
+*.tmp
+.env.local
+.env.development

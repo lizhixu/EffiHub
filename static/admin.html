@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EffiHub 后台管理</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        :root { --bg-primary: #1e1e1e; --bg-secondary: #252526; --bg-hover: #2a2d2e; --text-primary: #ccc; --text-secondary: #888; --text-title: #fff; --border: #3c3c3c; --accent: #0078d4; }
+        [data-theme="light"] { --bg-primary: #f5f5f5; --bg-secondary: #fff; --bg-hover: #e8e8e8; --text-primary: #333; --text-secondary: #666; --text-title: #1e1e1e; --border: #ddd; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-box { background: var(--bg-secondary); padding: 40px; border-radius: 12px; width: 320px; border: 1px solid var(--border); }
+        .login-box h2 { margin-bottom: 24px; color: var(--text-title); text-align: center; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-size: 14px; }
+        .login-box button { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+        .admin-container { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .header-logo { display: flex; align-items: center; gap: 12px; }
+        .header-logo img { height: 40px; width: auto; }
+        .header-logo span { font-size: 16px; color: var(--text-secondary); }
+        .logo-light { display: none; } .logo-dark { display: block; }
+        [data-theme="light"] .logo-light { display: block; } [data-theme="light"] .logo-dark { display: none; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-danger { background: #d32f2f; color: #fff; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn:hover { opacity: 0.85; }
+        .theme-toggle { width: 36px; height: 36px; border-radius: 6px; background: var(--bg-hover); border: 1px solid var(--border); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab { padding: 10px 20px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; cursor: pointer; }
+        .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
+        .toolbar select { padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; }
+        .data-table { width: 100%; border-collapse: collapse; background: var(--bg-secondary); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        .data-table th { background: var(--bg-primary); color: var(--text-secondary); font-weight: 500; }
+        .data-table td { color: var(--text-primary); }
+        .data-table .actions { display: flex; gap: 8px; }
+        .data-table .icon-cell img { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--bg-secondary); padding: 24px; border-radius: 12px; width: 420px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .modal-content h3 { margin-bottom: 20px; color: var(--text-title); }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-secondary); }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+        .upload-area { border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; }
+        .upload-area:hover { border-color: var(--accent); }
+        .upload-area.uploading { opacity: 0.6; pointer-events: none; }
+        .upload-area input { display: none; }
+        .upload-area p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+        .upload-preview { margin-top: 10px; }
+        .upload-preview img { max-width: 60px; max-height: 60px; border-radius: 6px; }
+        .icon-input-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        .icon-divider { text-align: center; font-size: 12px; color: var(--text-secondary); margin: 8px 0; }
+        .icon-url-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <div class="login-box"><h2>🔐 后台登录</h2><input type="password" id="password" placeholder="请输入管理密码"><button onclick="login()">登录</button></div>
+    </div>
+    <div class="admin-container" id="adminContainer">
+        <div class="admin-header">
+            <div class="header-logo">
+                <img src="https://images.lizhixu.cn/i/2025/12/03/12tlo5e.png" alt="EffiHub" class="logo-light">
+                <img src="https://images.lizhixu.cn/i/2025/12/03/12y4do1.png" alt="EffiHub" class="logo-dark">
+                <span>后台管理</span>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+                <button class="btn btn-secondary" onclick="location.href='/'">返回首页</button>
+                <button class="btn btn-danger" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+        <div class="tabs"><button class="tab active" onclick="showTab('categories')">分类管理</button><button class="tab" onclick="showTab('links')">链接管理</button></div>
+        <div class="tab-content" id="categoriesTab"><div class="toolbar"><button class="btn btn-primary" onclick="showCategoryModal()">+ 添加分类</button></div><table class="data-table"><thead><tr><th>ID</th><th>图标</th><th>名称</th><th>标识</th><th>排序</th><th>操作</th></tr></thead><tbody id="categoriesBody"></tbody></table></div>
+        <div class="tab-content" id="linksTab" style="display:none;"><div class="toolbar"><select id="filterCategory"><option value="">全部分类</option></select><button class="btn btn-primary" onclick="showLinkModal()">+ 添加链接</button></div><table class="data-table"><thead><tr><th>ID</th><th>图标</th><th>名称</th><th>简介</th><th>分类</th><th>操作</th></tr></thead><tbody id="linksBody"></tbody></table></div>
+    </div>
+    <div class="modal" id="categoryModal"><div class="modal-content"><h3 id="categoryModalTitle">添加分类</h3><input type="hidden" id="categoryId"><div class="form-group"><label>分类名称</label><input type="text" id="categoryName" placeholder="输入分类名称"></div><div class="form-group"><label>图标</label><div class="icon-input-wrapper"><div class="upload-area" onclick="document.getElementById('categoryIconFile').click()"><input type="file" id="categoryIconFile" accept="image/*" onchange="uploadIcon(this,'categoryIcon')"><p>📤 点击上传图片</p><div class="upload-preview" id="categoryIconPreview"></div></div><div class="icon-divider">— 或 —</div><input type="text" id="categoryIcon" class="icon-url-input" placeholder="直接粘贴图片URL"></div></div><div class="form-group"><label>标识 (英文)</label><input type="text" id="categorySlug" placeholder="如: dev, design"></div><div class="form-group"><label>排序</label><input type="number" id="categorySort" value="0"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('categoryModal')">取消</button><button class="btn btn-primary" onclick="saveCategory()">保存</button></div></div></div>
+    <div class="modal" id="linkModal"><div class="modal-content"><h3 id="linkModalTitle">添加链接</h3><input type="hidden" id="linkId"><div class="form-group"><label>所属分类</label><select id="linkCategory"></select></div><div class="form-group"><label>链接名称</label><input type="text" id="linkName" placeholder="输入链接名称"></div><div class="form-group"><label>链接地址</label><input type="text" id="linkUrl" placeholder="https://example.com"></div><div class="form-group"><label>图标</label><div class="icon-input-wrapper"><div class="upload-area" onclick="document.getElementById('linkIconFile').click()"><input type="file" id="linkIconFile" accept="image/*" onchange="uploadIcon(this,'linkIcon')"><p>📤 点击上传图片</p><div class="upload-preview" id="linkIconPreview"></div></div><div class="icon-divider">— 或 —</div><input type="text" id="linkIcon" class="icon-url-input" placeholder="直接粘贴图片URL"></div></div><div class="form-group"><label>简介</label><input type="text" id="linkDesc" placeholder="简短描述"></div><div class="form-group"><label>排序</label><input type="number" id="linkSort" value="0"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('linkModal')">取消</button><button class="btn btn-primary" onclick="saveLink()">保存</button></div></div></div>
+
+    <script>
+        const API='/api';
+        let categories=[],links=[],IMG_API='',IMG_TOKEN='';
+        
+        // 获取上传配置
+        fetch(API+'/auth/upload-config').then(r=>r.json()).then(d=>{IMG_API=d.api;IMG_TOKEN=d.token;});
+        
+        const themes=['auto','light','dark'],themeIcons={auto:'🖥️',light:'☀️',dark:'🌙'};
+        function getSystemTheme(){return window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
+        function applyTheme(t){document.documentElement.setAttribute('data-theme',t==='auto'?getSystemTheme():t);document.getElementById('themeToggle').textContent=themeIcons[t];}
+        let currentTheme=localStorage.getItem('theme')||'auto';applyTheme(currentTheme);
+        window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(localStorage.getItem('theme')==='auto')applyTheme('auto');});
+        document.getElementById('themeToggle').onclick=()=>{currentTheme=themes[(themes.indexOf(currentTheme)+1)%3];localStorage.setItem('theme',currentTheme);applyTheme(currentTheme);};
+        async function uploadIcon(input,targetId){const file=input.files[0];if(!file)return;const uploadArea=input.closest('.upload-area'),preview=uploadArea.querySelector('.upload-preview');uploadArea.classList.add('uploading');preview.innerHTML='<p>上传中...</p>';const formData=new FormData();formData.append('image',file);formData.append('token',IMG_TOKEN);try{const res=await fetch(IMG_API,{method:'POST',body:formData});const data=await res.json();if(data.result==='success'&&data.url){document.getElementById(targetId).value=data.url;preview.innerHTML=`<img src="${data.url}">`;}else throw new Error(data.message||'上传失败');}catch(e){alert('图片上传失败: '+e.message);preview.innerHTML='';}finally{uploadArea.classList.remove('uploading');input.value='';}}
+        async function login(){const pwd=document.getElementById('password').value;try{const res=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});const data=await res.json();if(data.success){sessionStorage.setItem('admin_logged','true');showAdmin();}else alert('密码错误');}catch(e){alert('登录失败');}}
+        function logout(){sessionStorage.removeItem('admin_logged');location.reload();}
+        function showAdmin(){document.getElementById('loginContainer').style.display='none';document.getElementById('adminContainer').style.display='block';loadData();}
+        function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');event.target.classList.add('active');document.getElementById(tab+'Tab').style.display='block';}
+        async function loadData(){try{const[catRes,linkRes]=await Promise.all([fetch(API+'/categories'),fetch(API+'/links')]);categories=await catRes.json()||[];links=await linkRes.json()||[];renderCategories();renderLinks();renderCategorySelects();}catch(e){console.error('加载失败',e);}}
+        function renderCategories(){document.getElementById('categoriesBody').innerHTML=categories.map(c=>`<tr><td>${c.id}</td><td class="icon-cell">${c.icon?`<img src="${c.icon}" onerror="this.style.display='none'">`:'—'}</td><td>${c.name}</td><td>${c.slug}</td><td>${c.sort}</td><td class="actions"><button class="btn btn-secondary" onclick="editCategory(${c.id})">编辑</button><button class="btn btn-danger" onclick="deleteCategory(${c.id})">删除</button></td></tr>`).join('');}
+        function renderLinks(){const filterId=document.getElementById('filterCategory').value;const filtered=filterId?links.filter(l=>l.category_id==filterId):links;document.getElementById('linksBody').innerHTML=filtered.map(l=>{const cat=categories.find(c=>c.id===l.category_id);return`<tr><td>${l.id}</td><td class="icon-cell">${l.icon?`<img src="${l.icon}" onerror="this.style.display='none'">`:'—'}</td><td>${l.name}</td><td>${l.desc||''}</td><td>${cat?.name||'—'}</td><td class="actions"><button class="btn btn-secondary" onclick="editLink(${l.id})">编辑</button><button class="btn btn-danger" onclick="deleteLink(${l.id})">删除</button></td></tr>`;}).join('');}
+        function renderCategorySelects(){const opts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');document.getElementById('filterCategory').innerHTML='<option value="">全部分类</option>'+opts;document.getElementById('linkCategory').innerHTML=opts;document.getElementById('filterCategory').onchange=renderLinks;}
+        function showCategoryModal(id=null){document.getElementById('categoryModalTitle').textContent=id?'编辑分类':'添加分类';document.getElementById('categoryId').value=id||'';document.getElementById('categoryIconPreview').innerHTML='';if(id){const c=categories.find(x=>x.id===id);document.getElementById('categoryName').value=c.name;document.getElementById('categoryIcon').value=c.icon||'';document.getElementById('categorySlug').value=c.slug;document.getElementById('categorySort').value=c.sort;if(c.icon)document.getElementById('categoryIconPreview').innerHTML=`<img src="${c.icon}">`;}else{['categoryName','categoryIcon','categorySlug'].forEach(x=>document.getElementById(x).value='');document.getElementById('categorySort').value='0';}document.getElementById('categoryModal').classList.add('show');}
+        function editCategory(id){showCategoryModal(id);}
+        async function saveCategory(){const id=document.getElementById('categoryId').value;const data={name:document.getElementById('categoryName').value,icon:document.getElementById('categoryIcon').value,slug:document.getElementById('categorySlug').value,sort:parseInt(document.getElementById('categorySort').value)||0};await fetch(id?`${API}/categories/${id}`:`${API}/categories`,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});closeModal('categoryModal');loadData();}
+        async function deleteCategory(id){if(!confirm('确定删除？相关链接也会被删除'))return;await fetch(`${API}/categories/${id}`,{method:'DELETE'});loadData();}
+        function showLinkModal(id=null){document.getElementById('linkModalTitle').textContent=id?'编辑链接':'添加链接';document.getElementById('linkId').value=id||'';document.getElementById('linkIconPreview').innerHTML='';if(id){const l=links.find(x=>x.id===id);document.getElementById('linkCategory').value=l.category_id;document.getElementById('linkName').value=l.name;document.getElementById('linkUrl').value=l.url;document.getElementById('linkIcon').value=l.icon||'';document.getElementById('linkDesc').value=l.desc||'';document.getElementById('linkSort').value=l.sort;if(l.icon)document.getElementById('linkIconPreview').innerHTML=`<img src="${l.icon}">`;}else{['linkName','linkUrl','linkIcon','linkDesc'].forEach(x=>document.getElementById(x).value='');document.getElementById('linkSort').value='0';}document.getElementById('linkModal').classList.add('show');}
+        function editLink(id){showLinkModal(id);}
+        async function saveLink(){const id=document.getElementById('linkId').value;const data={category_id:parseInt(document.getElementById('linkCategory').value),name:document.getElementById('linkName').value,url:document.getElementById('linkUrl').value,icon:document.getElementById('linkIcon').value,desc:document.getElementById('linkDesc').value,sort:parseInt(document.getElementById('linkSort').value)||0};await fetch(id?`${API}/links/${id}`:`${API}/links`,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});closeModal('linkModal');loadData();}
+        async function deleteLink(id){if(!confirm('确定删除？'))return;await fetch(`${API}/links/${id}`,{method:'DELETE'});loadData();}
+        function closeModal(id){document.getElementById(id).classList.remove('show');}
+        if(sessionStorage.getItem('admin_logged')==='true')showAdmin();
+        document.getElementById('password').onkeypress=e=>{if(e.key==='Enter')login();};
+    </script>
+</body>
+</html>

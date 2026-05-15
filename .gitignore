@@ -1,0 +1,22 @@
+# 环境变量
+.env
+
+# 编译输出
+dist/
+*.exe
+
+# Go
+go.sum
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志
+*.log
+
+# 临时文件
+tmp/
+temp/

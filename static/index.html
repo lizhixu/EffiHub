@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EffiHub 效率舱 - 高效导航，触手可及</title>
+    <meta name="description" content="EffiHub 效率舱是一个现代化的导航站，汇集开发工具、设计资源、AI工具、效率工具等优质网站，助你提升工作效率。">
+    <meta name="keywords" content="导航站,效率工具,开发工具,设计资源,AI工具,网址导航,EffiHub">
+    <meta name="author" content="EffiHub">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="EffiHub 效率舱 - 高效导航，触手可及">
+    <meta property="og:description" content="现代化导航站，汇集开发、设计、AI等优质工具网站">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://images.lizhixu.cn/i/2025/12/03/12tlo5e.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EffiHub 效率舱">
+    <meta name="twitter:description" content="现代化导航站，汇集开发、设计、AI等优质工具网站">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="canonical" href="/">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <div class="titlebar">
+            <div class="titlebar-logo">
+                <img src="https://images.lizhixu.cn/i/2025/12/03/12tlo5e.png" alt="EffiHub" class="logo-light">
+                <img src="https://images.lizhixu.cn/i/2025/12/03/12y4do1.png" alt="EffiHub" class="logo-dark">
+            </div>
+            <div class="titlebar-title">EffiHub 效率舱</div>
+            <div class="titlebar-search">
+                <input type="text" id="searchInput" placeholder="搜索... (⌘K)">
+            </div>
+        </div>
+
+        <div class="container">
+            <aside class="sidebar">
+                <nav class="sidebar-nav" id="sidebarNav">
+                    <div class="loading-placeholder">加载中...</div>
+                </nav>
+                <div class="sidebar-footer">
+                    <button class="theme-btn" id="themeToggle">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </aside>
+
+            <main class="main" id="mainContent">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载数据...</p>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

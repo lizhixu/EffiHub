@@ -1,0 +1,38 @@
+# Air 热更新配置文档 https://github.com/air-verse/air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  # 编译命令
+  cmd = "go build -o ./tmp/main.exe ."
+  # 二进制文件路径
+  bin = "./tmp/main.exe"
+  # 监听的文件扩展名
+  include_ext = ["go", "tmpl", "html"]
+  # 排除的目录
+  exclude_dir = ["tmp", "dist", "static", "vendor"]
+  # 排除的文件
+  exclude_file = []
+  # 首次是否自动编译
+  full_bin = ""
+  # 延迟编译（ms）
+  delay = 1000
+  # 编译失败是否停止
+  stop_on_error = true
+  # 日志前缀
+  log = "build-errors.log"
+
+[log]
+  # 是否显示时间
+  time = false
+
+[color]
+  main    = "magenta"
+  watcher = "cyan"
+  build   = "yellow"
+  runner  = "green"
+
+[misc]
+  # 退出时删除 tmp 目录
+  clean_on_exit = true

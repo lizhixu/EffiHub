@@ -1,5 +1,7 @@
 FROM --platform=linux/amd64 golang:1.21 AS builder
 
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /build
 
 # 先复制依赖文件，利用 Docker 缓存

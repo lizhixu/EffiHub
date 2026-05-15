@@ -1,5 +1,7 @@
 FROM --platform=linux/amd64 golang:1.21-alpine AS builder
 
+RUN apk add --no-cache gcc musl-dev
+
 WORKDIR /build
 
 # 先复制依赖文件，利用 Docker 缓存
@@ -12,7 +14,7 @@ COPY config/ ./config/
 COPY models/ ./models/
 COPY handlers/ ./handlers/
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o effihub .
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o effihub .
 
 FROM --platform=linux/amd64 alpine:3.19
 

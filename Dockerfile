@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 golang:1.21 AS builder
+FROM golang:1.21 AS builder
 
 WORKDIR /build
 
@@ -12,9 +12,12 @@ COPY config/ ./config/
 COPY models/ ./models/
 COPY handlers/ ./handlers/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o effihub .
+# 针对小内存云端编译环境的优化：
+# 1. 限制并发编译数为 1 (-p 1)，极大降低编译期的内存占用
+# 2. 调低 GOGC=50 更加积极地回收内存
+RUN CGO_ENABLED=0 GOOS=linux GOGC=50 go build -p 1 -ldflags="-s -w" -o effihub .
 
-FROM --platform=linux/amd64 alpine:latest
+FROM alpine:latest
 
 WORKDIR /app
 

@@ -3,7 +3,7 @@ FROM --platform=linux/amd64 golang:1.21-alpine AS builder
 WORKDIR /build
 
 # 先复制依赖文件，利用 Docker 缓存
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN go mod download
 
 # 再复制源代码

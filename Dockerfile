@@ -1,11 +1,9 @@
 FROM --platform=linux/amd64 golang:1.21 AS builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /build
 
 # 先复制依赖文件，利用 Docker 缓存
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 # 再复制源代码
@@ -14,7 +12,7 @@ COPY config/ ./config/
 COPY models/ ./models/
 COPY handlers/ ./handlers/
 
-RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o effihub .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o effihub .
 
 FROM --platform=linux/amd64 debian:bookworm-slim
 

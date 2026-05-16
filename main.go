@@ -20,6 +20,19 @@ func main() {
 		}
 	}
 
+	// 打印环境变量以供调试
+	log.Println("=== 当前加载的环境变量 ===")
+	log.Printf("DB_HOST: '%s'", os.Getenv("DB_HOST"))
+	log.Printf("DB_PORT: '%s'", os.Getenv("DB_PORT"))
+	log.Printf("DB_USER: '%s'", os.Getenv("DB_USER"))
+	log.Printf("DB_NAME: '%s'", os.Getenv("DB_NAME"))
+	if pwd := os.Getenv("DB_PASSWORD"); pwd != "" {
+		log.Printf("DB_PASSWORD: [已设置, 长度: %d]", len(pwd))
+	} else {
+		log.Printf("DB_PASSWORD: [未设置或为空]")
+	}
+	log.Println("==========================")
+
 	// 初始化数据库
 	if err := config.InitDB(); err != nil {
 		log.Fatal("数据库连接失败:", err)

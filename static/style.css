@@ -131,9 +131,12 @@ body {
     background: var(--bg-hover);
     color: var(--text-primary);
     cursor: pointer;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .theme-btn:hover { background: var(--bg-active); }
+.theme-icon { width: 18px; height: 18px; }
 
 .main { flex: 1; padding: 16px 20px; overflow-y: auto; background: var(--bg-content); }
 .category { margin-bottom: 20px; }

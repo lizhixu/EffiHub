@@ -142,6 +142,13 @@ func LinkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 健康检查
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
 // 单个分类操作
 func CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

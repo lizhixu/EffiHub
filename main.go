@@ -35,6 +35,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// API 路由
+	mux.HandleFunc("/health", handlers.HealthHandler)
 	mux.HandleFunc("/api/auth/login", handlers.LoginHandler)
 	mux.HandleFunc("/api/auth/upload-config", handlers.UploadConfigHandler)
 	mux.HandleFunc("/api/categories", handlers.CategoriesHandler)

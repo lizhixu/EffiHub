@@ -35,12 +35,14 @@ body {
     line-height: 1.4;
     overflow: hidden;
     height: 100vh;
+    height: 100dvh;
 }
 
 .app {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh;
     border-radius: 10px;
     overflow: hidden;
 }
@@ -101,6 +103,8 @@ body {
     flex: 1;
     padding: 8px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -122,23 +126,26 @@ body {
 .nav-item.active { background: var(--bg-active); color: var(--text-title); }
 .nav-icon { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
 
-.sidebar-footer { padding: 8px; border-top: 1px solid var(--border); }
+.sidebar-footer { padding: 8px; border-top: 1px solid var(--border); display: flex; gap: 4px; justify-content: center; }
 .theme-btn {
-    width: 100%;
-    padding: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
     border: none;
     border-radius: 6px;
-    background: var(--bg-hover);
-    color: var(--text-primary);
+    background: transparent;
+    color: var(--text-secondary);
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
 }
-.theme-btn:hover { background: var(--bg-active); }
-.theme-icon { width: 18px; height: 18px; }
+.theme-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.theme-icon { width: 16px; height: 16px; }
 
-.main { flex: 1; padding: 16px 20px; overflow-y: auto; background: var(--bg-content); }
+.main { flex: 1; padding: 16px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background: var(--bg-content); }
 .category { margin-bottom: 20px; }
 .category-title {
     font-size: 11px;
@@ -227,8 +234,9 @@ body {
     .sidebar { width: 50px; }
     .nav-item span:not(.nav-icon) { display: none; }
     .nav-item { justify-content: center; padding: 10px; }
+    .admin-btn { display: none; }
     .links-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
-    .main { padding: 12px; }
+    .main { padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 
 .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); gap: 16px; }

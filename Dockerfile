@@ -1,23 +1,25 @@
-FROM alpine:latest
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+# 阶段 1: 编译
+FROM golang:1.21-alpine AS builder
 
-# 安装必要工具和非 root 用户
-RUN apk add --no-cache ca-certificates tzdata wget && \
-    addgroup -S appuser && adduser -S appuser -G appuser
+WORKDIR /build
 
-# 直接复制 CI 编译好的二进制文件
-COPY effihub-linux-amd64 ./effihub
-COPY static/ ./static/
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN chown -R appuser:appuser /app && \
-    chmod +x effihub
+COPY . .
 
-USER appuser
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o effihub .
+
+# 阶段 2: 运行时
+FROM scratch
+
+COPY --from=builder /build/effihub /effihub
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY static/ /static/
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
-
-CMD ["./effihub"]
+ENTRYPOINT ["/effihub"]

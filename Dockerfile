@@ -17,7 +17,6 @@ FROM scratch
 
 COPY --from=builder /build/effihub /effihub
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY static/ /static/
 
 EXPOSE 8080

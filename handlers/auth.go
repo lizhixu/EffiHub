@@ -88,7 +88,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		// 生成 token
 		token, err := GenerateToken(req.RememberMe)
 		if err != nil {
-			json.NewEncoder(w).Encode(LoginResponse{Success: false})
+			// token 生成失败，仍然返回成功但无 token
+			json.NewEncoder(w).Encode(LoginResponse{Success: true, Token: ""})
 			return
 		}
 

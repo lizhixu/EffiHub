@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"effihub/config"
@@ -11,8 +13,18 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// JWT 密钥（从环境变量读取，或使用默认值）
-var jwtSecret = []byte(config.GetJWTSecret())
+// JWT 密钥（延迟初始化）
+var (
+	jwtSecretOnce sync.Once
+	jwtSecretVal   []byte
+)
+
+func getJWTSecret() []byte {
+	jwtSecretOnce.Do(func() {
+		jwtSecretVal = []byte(config.GetJWTSecret())
+	})
+	return jwtSecretVal
+}
 
 // 登录请求结构
 type LoginRequest struct {
@@ -41,13 +53,13 @@ func GenerateToken(rememberMe bool) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(getJWTSecret())
 }
 
 // 验证 JWT token
 func ValidateToken(tokenString string) bool {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return getJWTSecret(), nil
 	})
 
 	if err != nil {
@@ -88,8 +100,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		// 生成 token
 		token, err := GenerateToken(req.RememberMe)
 		if err != nil {
-			// token 生成失败，仍然返回成功但无 token
-			json.NewEncoder(w).Encode(LoginResponse{Success: true, Token: ""})
+			// token 生成失败，返回失败以便前端提示
+			log.Printf("Token 生成失败: %v", err)
+			json.NewEncoder(w).Encode(LoginResponse{Success: false})
 			return
 		}
 

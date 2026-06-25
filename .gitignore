@@ -6,7 +6,6 @@ dist/
 *.exe
 
 # Go
-go.sum
 
 # IDE
 .vscode/

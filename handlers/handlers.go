@@ -17,7 +17,20 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		rows, err := config.DB.Query("SELECT id, name, icon, slug, sort FROM categories ORDER BY sort")
+		// 检查 token 有效性
+		token := ExtractToken(r)
+		isValidToken := token != "" && ValidateToken(token)
+
+		var query string
+		if isValidToken {
+			// 有效 token：返回所有分类
+			query = "SELECT id, name, icon, slug, sort, require_login FROM categories ORDER BY sort"
+		} else {
+			// 无 token 或无效 token：只返回不需要登录的分类
+			query = "SELECT id, name, icon, slug, sort, require_login FROM categories WHERE require_login = FALSE ORDER BY sort"
+		}
+
+		rows, err := config.DB.Query(query)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -27,7 +40,7 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		var categories []models.Category
 		for rows.Next() {
 			var c models.Category
-			rows.Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort)
+			rows.Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort, &c.RequireLogin)
 			categories = append(categories, c)
 		}
 		json.NewEncoder(w).Encode(categories)
@@ -35,8 +48,8 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var c models.Category
 		json.NewDecoder(r.Body).Decode(&c)
-		result, err := config.DB.Exec("INSERT INTO categories (name, icon, slug, sort) VALUES (?, ?, ?, ?)",
-			c.Name, c.Icon, c.Slug, c.Sort)
+		result, err := config.DB.Exec("INSERT INTO categories (name, icon, slug, sort, require_login) VALUES (?, ?, ?, ?, ?)",
+			c.Name, c.Icon, c.Slug, c.Sort, c.RequireLogin)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -164,8 +177,8 @@ func CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		var c models.Category
 		err := config.DB.QueryRow(
-			"SELECT id, name, icon, slug, sort FROM categories WHERE id = ?", id).
-			Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort)
+			"SELECT id, name, icon, slug, sort, require_login FROM categories WHERE id = ?", id).
+			Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort, &c.RequireLogin)
 		if err != nil {
 			http.Error(w, "分类不存在", http.StatusNotFound)
 			return
@@ -176,8 +189,8 @@ func CategoryHandler(w http.ResponseWriter, r *http.Request) {
 		var c models.Category
 		json.NewDecoder(r.Body).Decode(&c)
 		_, err := config.DB.Exec(
-			"UPDATE categories SET name=?, icon=?, slug=?, sort=? WHERE id=?",
-			c.Name, c.Icon, c.Slug, c.Sort, id)
+			"UPDATE categories SET name=?, icon=?, slug=?, sort=?, require_login=? WHERE id=?",
+			c.Name, c.Icon, c.Slug, c.Sort, c.RequireLogin, id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

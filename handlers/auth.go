@@ -3,9 +3,71 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
+	"time"
 
 	"effihub/config"
+
+	"github.com/golang-jwt/jwt/v5"
 )
+
+// JWT 密钥（从环境变量读取，或使用默认值）
+var jwtSecret = []byte(config.GetJWTSecret())
+
+// 登录请求结构
+type LoginRequest struct {
+	Password   string `json:"password"`
+	RememberMe bool   `json:"remember_me"`
+}
+
+// 登录响应结构
+type LoginResponse struct {
+	Success bool   `json:"success"`
+	Token   string `json:"token,omitempty"`
+}
+
+// 生成 JWT token
+func GenerateToken(rememberMe bool) (string, error) {
+	// 设置过期时间：记住我 15 天，不记住 24 小时
+	duration := 24 * time.Hour
+	if rememberMe {
+		duration = 15 * 24 * time.Hour
+	}
+
+	claims := jwt.MapClaims{
+		"sub": "admin",
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(duration).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}
+
+// 验证 JWT token
+func ValidateToken(tokenString string) bool {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return false
+	}
+
+	return token.Valid
+}
+
+// 从请求中提取 token
+func ExtractToken(r *http.Request) string {
+	// 从 Authorization header 提取
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		return strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	// 从查询参数提取（用于某些场景）
+	return r.URL.Query().Get("token")
+}
 
 // 登录验证
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -16,19 +78,26 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		Password string `json:"password"`
-	}
-
+	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
 	if req.Password == config.GetAdminPassword() {
-		json.NewEncoder(w).Encode(map[string]bool{"success": true})
+		// 生成 token
+		token, err := GenerateToken(req.RememberMe)
+		if err != nil {
+			json.NewEncoder(w).Encode(LoginResponse{Success: false})
+			return
+		}
+
+		json.NewEncoder(w).Encode(LoginResponse{
+			Success: true,
+			Token:   token,
+		})
 	} else {
-		json.NewEncoder(w).Encode(map[string]bool{"success": false})
+		json.NewEncoder(w).Encode(LoginResponse{Success: false})
 	}
 }
 

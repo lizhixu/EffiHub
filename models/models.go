@@ -5,11 +5,12 @@ import (
 )
 
 type Category struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Icon string `json:"icon"`
-	Slug string `json:"slug"`
-	Sort int    `json:"sort"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Icon         string `json:"icon"`
+	Slug         string `json:"slug"`
+	Sort         int    `json:"sort"`
+	RequireLogin bool   `json:"require_login"`
 }
 
 type Link struct {
@@ -31,11 +32,19 @@ func InitTables() error {
 			icon TEXT,
 			slug VARCHAR(50) UNIQUE,
 			sort INT DEFAULT 0,
+			require_login BOOLEAN DEFAULT FALSE,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	`)
 	if err != nil {
 		return err
+	}
+
+	// 自动迁移：添加 require_login 字段（如果不存在）
+	var colExists bool
+	config.DB.QueryRow(`SELECT COUNT(*) > 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'categories' AND COLUMN_NAME = 'require_login'`).Scan(&colExists)
+	if !colExists {
+		config.DB.Exec(`ALTER TABLE categories ADD COLUMN require_login BOOLEAN DEFAULT FALSE`)
 	}
 
 	// 创建链接表

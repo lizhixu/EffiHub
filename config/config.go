@@ -23,3 +23,10 @@ func GetImageUploadAPI() string {
 	}
 	return "https://img.lizhixu.cn/api/index.php"
 }
+
+func GetJWTSecret() string {
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		return secret
+	}
+	return "effihub-jwt-secret-key-2024" // 默认密钥
+}

@@ -43,10 +43,16 @@ themeToggle.addEventListener('click', () => {
 
 const API = '/api';
 
+function getToken() {
+    return localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token') || '';
+}
+
 async function loadData() {
     try {
+        const token = getToken();
+        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
         const [catRes, linkRes] = await Promise.all([
-            fetch(`${API}/categories`),
+            fetch(`${API}/categories`, { headers }),
             fetch(`${API}/links`)
         ]);
         if (!catRes.ok || !linkRes.ok) throw new Error('API 错误');

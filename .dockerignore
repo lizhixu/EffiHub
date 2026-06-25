@@ -8,9 +8,10 @@
 *.swp
 *.swo
 
-# Build outputs
+# Build outputs (不含源码)
 dist/
 build/
+effihub
 
 # Documentation
 *.md

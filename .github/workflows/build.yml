@@ -53,9 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: effihub-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: |
-            dist/effihub-*
-            dist/static/
+          path: dist/
 
   release:
     needs: build
@@ -101,14 +99,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: effihub-linux-amd64
-          path: dist
-
-      - name: Prepare Docker context
-        run: |
-          mv dist/dist/effihub-* .
-          rm -rf static
-          mv dist/dist/static .
-          rm -rf dist
+          path: .
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3

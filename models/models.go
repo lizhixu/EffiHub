@@ -11,6 +11,7 @@ type Category struct {
 	Slug         string `json:"slug"`
 	Sort         int    `json:"sort"`
 	RequireLogin bool   `json:"require_login"`
+	Enabled      bool   `json:"enabled"`
 }
 
 type Link struct {
@@ -21,6 +22,7 @@ type Link struct {
 	Icon       string `json:"icon"`
 	Desc       string `json:"desc"`
 	Sort       int    `json:"sort"`
+	Enabled    bool   `json:"enabled"`
 }
 
 func InitTables() error {
@@ -47,6 +49,12 @@ func InitTables() error {
 		config.DB.Exec(`ALTER TABLE categories ADD COLUMN require_login BOOLEAN DEFAULT FALSE`)
 	}
 
+	// 自动迁移：添加 enabled 字段到 categories 表（如果不存在）
+	config.DB.QueryRow(`SELECT COUNT(*) > 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'categories' AND COLUMN_NAME = 'enabled'`).Scan(&colExists)
+	if !colExists {
+		config.DB.Exec(`ALTER TABLE categories ADD COLUMN enabled BOOLEAN DEFAULT TRUE`)
+	}
+
 	// 创建链接表
 	_, err = config.DB.Exec(`
 		CREATE TABLE IF NOT EXISTS links (
@@ -63,6 +71,12 @@ func InitTables() error {
 	`)
 	if err != nil {
 		return err
+	}
+
+	// 自动迁移：添加 enabled 字段到 links 表（如果不存在）
+	config.DB.QueryRow(`SELECT COUNT(*) > 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'links' AND COLUMN_NAME = 'enabled'`).Scan(&colExists)
+	if !colExists {
+		config.DB.Exec(`ALTER TABLE links ADD COLUMN enabled BOOLEAN DEFAULT TRUE`)
 	}
 
 	return nil

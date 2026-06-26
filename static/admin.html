@@ -10,7 +10,7 @@
         [data-theme="light"] { --bg-primary: #f5f5f5; --bg-secondary: #fff; --bg-hover: #e8e8e8; --text-primary: #333; --text-secondary: #666; --text-title: #1e1e1e; --border: #ddd; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); }
+        .login-container { display: none; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); }
         [data-theme="light"] .login-container { background: linear-gradient(135deg, #e8ecf1 0%, #f0f4f8 50%, #e2e8f0 100%); }
         .login-box { background: var(--bg-secondary); padding: 48px 40px; border-radius: 16px; width: 380px; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .login-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent)); }
@@ -165,7 +165,8 @@
         async function saveLink(){const id=document.getElementById('linkId').value;const data={category_id:parseInt(document.getElementById('linkCategory').value),name:document.getElementById('linkName').value,url:document.getElementById('linkUrl').value,icon:document.getElementById('linkIcon').value,desc:document.getElementById('linkDesc').value,sort:parseInt(document.getElementById('linkSort').value)||0};await fetch(id?`${API}/links/${id}`:`${API}/links`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('linkModal');loadData();}
         async function deleteLink(id){if(!confirm('确定删除？'))return;await fetch(`${API}/links/${id}`,{method:'DELETE',headers:authHeaders()});loadData();}
         function closeModal(id){document.getElementById(id).classList.remove('show');if(id==='linkModal'){if(fetchController)fetchController.abort();const btn=document.querySelector('.btn-fetch-icon');if(btn)btn.classList.remove('fetching');}}
-        if(getToken()&&sessionStorage.getItem('admin_logged')==='true')showAdmin();
+        if(getToken())showAdmin();
+        else document.getElementById('loginContainer').style.display='flex';
         document.getElementById('password').onkeypress=e=>{if(e.key==='Enter')login();};
     </script>
 </body>

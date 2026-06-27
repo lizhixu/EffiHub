@@ -40,7 +40,12 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		var categories []models.Category
 		for rows.Next() {
 			var c models.Category
-			rows.Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort, &c.RequireLogin, &c.Enabled)
+			var enabled sql.NullBool
+			err := rows.Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort, &c.RequireLogin, &enabled)
+			if err != nil {
+				continue
+			}
+			c.Enabled = enabled.Valid && enabled.Bool
 			categories = append(categories, c)
 		}
 		json.NewEncoder(w).Encode(categories)
@@ -105,7 +110,12 @@ func LinksHandler(w http.ResponseWriter, r *http.Request) {
 		var links []models.Link
 		for rows.Next() {
 			var l models.Link
-			rows.Scan(&l.ID, &l.CategoryID, &l.Name, &l.URL, &l.Icon, &l.Desc, &l.Sort, &l.Enabled)
+			var enabled sql.NullBool
+			err := rows.Scan(&l.ID, &l.CategoryID, &l.Name, &l.URL, &l.Icon, &l.Desc, &l.Sort, &enabled)
+			if err != nil {
+				continue
+			}
+			l.Enabled = enabled.Valid && enabled.Bool
 			links = append(links, l)
 		}
 		json.NewEncoder(w).Encode(links)
@@ -140,13 +150,15 @@ func LinkHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		var l models.Link
-		err := config.DB.QueryRow(
+		var enabled sql.NullBool
+		err = config.DB.QueryRow(
 			"SELECT id, category_id, name, url, icon, description, sort, enabled FROM links WHERE id = ?", id).
-			Scan(&l.ID, &l.CategoryID, &l.Name, &l.URL, &l.Icon, &l.Desc, &l.Sort, &l.Enabled)
+			Scan(&l.ID, &l.CategoryID, &l.Name, &l.URL, &l.Icon, &l.Desc, &l.Sort, &enabled)
 		if err != nil {
 			http.Error(w, "链接不存在", http.StatusNotFound)
 			return
 		}
+		l.Enabled = enabled.Valid && enabled.Bool
 		json.NewEncoder(w).Encode(l)
 
 	case "PUT":
@@ -161,6 +173,22 @@ func LinkHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		l.ID = id
 		json.NewEncoder(w).Encode(l)
+
+	case "PATCH":
+		var body struct {
+			Enabled *bool `json:"enabled"`
+		}
+		json.NewDecoder(r.Body).Decode(&body)
+		if body.Enabled == nil {
+			http.Error(w, "enabled 字段必填", http.StatusBadRequest)
+			return
+		}
+		_, err := config.DB.Exec("UPDATE links SET enabled=? WHERE id=?", *body.Enabled, id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "enabled": *body.Enabled})
 
 	case "DELETE":
 		_, err := config.DB.Exec("DELETE FROM links WHERE id = ?", id)
@@ -193,13 +221,15 @@ func CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		var c models.Category
-		err := config.DB.QueryRow(
+		var enabled sql.NullBool
+		err = config.DB.QueryRow(
 			"SELECT id, name, icon, slug, sort, require_login, enabled FROM categories WHERE id = ?", id).
-			Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort, &c.RequireLogin, &c.Enabled)
+			Scan(&c.ID, &c.Name, &c.Icon, &c.Slug, &c.Sort, &c.RequireLogin, &enabled)
 		if err != nil {
 			http.Error(w, "分类不存在", http.StatusNotFound)
 			return
 		}
+		c.Enabled = enabled.Valid && enabled.Bool
 		json.NewEncoder(w).Encode(c)
 
 	case "PUT":
@@ -214,6 +244,22 @@ func CategoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		c.ID = id
 		json.NewEncoder(w).Encode(c)
+
+	case "PATCH":
+		var body struct {
+			Enabled *bool `json:"enabled"`
+		}
+		json.NewDecoder(r.Body).Decode(&body)
+		if body.Enabled == nil {
+			http.Error(w, "enabled 字段必填", http.StatusBadRequest)
+			return
+		}
+		_, err := config.DB.Exec("UPDATE categories SET enabled=? WHERE id=?", *body.Enabled, id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "enabled": *body.Enabled})
 
 	case "DELETE":
 		_, err := config.DB.Exec("DELETE FROM categories WHERE id = ?", id)

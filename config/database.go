@@ -34,7 +34,7 @@ func InitDB() error {
 	dbPort := getEnvOrDefault("DB_PORT", "3306")
 	dbName := getEnvOrDefault("DB_NAME", "effihub")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=custom&parseTime=true",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=custom&parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci",
 		dbUser, dbPassword, dbHost, dbPort, dbName,
 	)
 

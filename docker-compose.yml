@@ -3,11 +3,23 @@ services:
     image: jacyli/effihub:latest
     container_name: effihub
     ports:
-      - "8080:8080"
+      - "8899:8080"
     volumes:
       - ./data:/app/data
-    env_file:
-      - .env
+    environment:
+      # 后台管理密码
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-1qaz@WSX#EDC}
+      # JWT 密钥
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key-here}
+      # 图片上传配置
+      IMAGE_UPLOAD_API: ${IMAGE_UPLOAD_API:-}
+      IMAGE_UPLOAD_TOKEN: ${IMAGE_UPLOAD_TOKEN:-}
+      # 数据库配置
+      DB_HOST: ${DB_HOST:-mysql-host.com}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER:-username}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-database}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]

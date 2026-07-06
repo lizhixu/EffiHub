@@ -31,6 +31,12 @@ func main() {
 		log.Fatal("建表失败:", err)
 	}
 
+	// 获取端口配置，默认 8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	// 路由
 	mux := http.NewServeMux()
 
@@ -50,8 +56,8 @@ func main() {
 	// CORS 中间件
 	handler := corsMiddleware(mux)
 
-	log.Println("服务启动在 http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Printf("服务启动在 http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
 func corsMiddleware(next http.Handler) http.Handler {

@@ -3,10 +3,12 @@ services:
     image: jacyli/effihub:latest
     container_name: effihub
     ports:
-      - "8899:8080"
+      - "8899:8899"
     volumes:
       - ./data:/app/data
     environment:
+      # 应用端口
+      PORT: 8899
       # 后台管理密码
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-1qaz@WSX#EDC}
       # JWT 密钥
@@ -22,7 +24,7 @@ services:
       DB_NAME: ${DB_NAME:-database}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8899/health"]
       interval: 30s
       timeout: 10s
       retries: 3

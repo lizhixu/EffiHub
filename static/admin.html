@@ -150,6 +150,32 @@
         .btn-fetch-icon.fetching .fetch-spinner { display: block; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
+        /* Loading */
+        .loading-overlay { position: absolute; inset: 0; background: var(--bg-sidebar); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 10; border-radius: 8px; }
+        .loading-spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: loading-spin 0.7s linear infinite; }
+        .loading-text { font-size: 12px; color: var(--text-secondary); }
+        @keyframes loading-spin { to { transform: rotate(360deg); } }
+        .data-table-wrap { position: relative; }
+        .table-scroll.loading { opacity: 0.35; pointer-events: none; }
+        /* 骨架行：表格加载时的占位 */
+        .skeleton-row td { padding: 10px 12px; }
+        .skeleton-line { height: 14px; border-radius: 4px; background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite; }
+        @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* Pagination */
+        .data-table-wrap { display: flex; flex-direction: column; }
+        .table-scroll { flex: 1; overflow-x: auto; }
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-top: 1px solid var(--border); background: var(--bg-sidebar); flex-shrink: 0; gap: 12px; }
+        .pagination-info { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+        .pagination-controls { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .page-btn { min-width: 28px; height: 28px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-window); color: var(--text-primary); cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; user-select: none; }
+        .page-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); background: var(--bg-hover); }
+        .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; cursor: default; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-ellipsis { padding: 0 4px; color: var(--text-secondary); user-select: none; }
+        .page-size { padding: 5px 8px; background: var(--bg-window); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; transition: border-color 0.15s; }
+        .page-size:focus { border-color: var(--accent); }
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -175,8 +201,8 @@
             </div>
         </div>
         <div class="tabs"><button class="tab active" onclick="showTab('categories')">分类管理</button><button class="tab" onclick="showTab('links')">链接管理</button></div>
-        <div class="tab-content" id="categoriesTab"><div class="toolbar"><input type="text" id="searchCategory" placeholder="搜索分类名称..." oninput="renderCategories()"><select id="filterCategoryStatus" onchange="renderCategories()"><option value="">全部状态</option><option value="1">已启用</option><option value="0">已禁用</option></select><select id="filterCategoryLogin" onchange="renderCategories()"><option value="">全部</option><option value="1">需登录</option><option value="0">公开</option></select><button class="btn btn-primary" onclick="showCategoryModal()">+ 添加分类</button></div><div class="data-table-wrap"><table class="data-table"><colgroup><col style="width:50px"><col style="width:60px"><col><col><col style="width:90px"><col style="width:60px"><col style="width:60px"><col style="width:120px"></colgroup><thead><tr><th>ID</th><th>图标</th><th>名称</th><th>标识</th><th>需要登录</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody id="categoriesBody"></tbody></table></div></div>
-        <div class="tab-content" id="linksTab" style="display:none;"><div class="toolbar"><select id="filterCategory"><option value="">全部分类</option></select><input type="text" id="searchLink" placeholder="搜索名称/链接/简介..." oninput="renderLinks()"><select id="filterLinkStatus" onchange="renderLinks()"><option value="">全部状态</option><option value="1">已启用</option><option value="0">已禁用</option></select><button class="btn btn-primary" onclick="showLinkModal()">+ 添加链接</button></div><div class="data-table-wrap"><table class="data-table"><colgroup><col style="width:50px"><col style="width:60px"><col style="width:18%"><col><col style="width:100px"><col style="width:60px"><col style="width:60px"><col style="width:120px"></colgroup><thead><tr><th>ID</th><th>图标</th><th>名称</th><th>简介</th><th>分类</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody id="linksBody"></tbody></table></div></div>
+        <div class="tab-content" id="categoriesTab"><div class="toolbar"><input type="text" id="searchCategory" placeholder="搜索分类名称..."><select id="filterCategoryStatus"><option value="">全部状态</option><option value="1">已启用</option><option value="0">已禁用</option></select><select id="filterCategoryLogin"><option value="">全部</option><option value="1">需登录</option><option value="0">公开</option></select><button class="btn btn-primary" onclick="showCategoryModal()">+ 添加分类</button></div><div class="data-table-wrap"><div class="table-scroll"><table class="data-table"><colgroup><col style="width:50px"><col style="width:60px"><col><col><col style="width:90px"><col style="width:60px"><col style="width:60px"><col style="width:120px"></colgroup><thead><tr><th>ID</th><th>图标</th><th>名称</th><th>标识</th><th>需要登录</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody id="categoriesBody"></tbody></table></div><div class="pagination" id="categoriesPagination"></div></div></div>
+        <div class="tab-content" id="linksTab" style="display:none;"><div class="toolbar"><select id="filterCategory"><option value="">全部分类</option></select><input type="text" id="searchLink" placeholder="搜索名称/链接/简介..."><select id="filterLinkStatus"><option value="">全部状态</option><option value="1">已启用</option><option value="0">已禁用</option></select><button class="btn btn-primary" onclick="showLinkModal()">+ 添加链接</button></div><div class="data-table-wrap"><div class="table-scroll"><table class="data-table"><colgroup><col style="width:50px"><col style="width:60px"><col style="width:18%"><col><col style="width:100px"><col style="width:60px"><col style="width:60px"><col style="width:120px"></colgroup><thead><tr><th>ID</th><th>图标</th><th>名称</th><th>简介</th><th>分类</th><th>排序</th><th>状态</th><th>操作</th></tr></thead><tbody id="linksBody"></tbody></table></div><div class="pagination" id="linksPagination"></div></div></div>
     </div>
     <div class="modal" id="categoryModal"><div class="modal-content"><h3 id="categoryModalTitle">添加分类</h3><input type="hidden" id="categoryId"><div class="form-group"><label>分类名称</label><input type="text" id="categoryName" placeholder="输入分类名称"></div><div class="form-group"><label>图标</label><div class="icon-input-wrapper"><div class="upload-area" onclick="document.getElementById('categoryIconFile').click()"><input type="file" id="categoryIconFile" accept="image/*" onchange="uploadIcon(this,'categoryIcon')"><p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>点击上传图片</p><div class="upload-preview" id="categoryIconPreview"></div></div><div class="icon-divider">— 或 —</div><input type="text" id="categoryIcon" class="icon-url-input" placeholder="直接粘贴图片URL"></div></div><div class="form-group"><label>标识 (英文)</label><input type="text" id="categorySlug" placeholder="如: dev, design"></div><div class="form-group"><label>排序</label><input type="number" id="categorySort" value="0"></div><div class="remember-row"><input type="checkbox" id="categoryRequireLogin"><label for="categoryRequireLogin">需要登录才能查看</label></div><div class="remember-row"><input type="checkbox" id="categoryEnabled" checked><label for="categoryEnabled">启用</label></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('categoryModal')">取消</button><button class="btn btn-primary" onclick="saveCategory()">保存</button></div></div></div>
     <div class="modal" id="linkModal"><div class="modal-content"><h3 id="linkModalTitle">添加链接</h3><input type="hidden" id="linkId"><div class="form-group"><label>所属分类</label><select id="linkCategory"></select></div><div class="form-group"><label>链接名称</label><input type="text" id="linkName" placeholder="输入链接名称"></div><div class="form-group"><label>链接地址</label><div class="url-input-row"><input type="text" id="linkUrl" placeholder="https://example.com" onblur="autoFetchFavicon()"><button type="button" class="btn-fetch-icon" onclick="autoFetchFavicon()" title="Get favicon"><svg class="fetch-search" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><svg class="fetch-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg></button></div></div><div class="form-group"><label>图标</label><div class="icon-input-wrapper"><div class="upload-area" onclick="document.getElementById('linkIconFile').click()"><input type="file" id="linkIconFile" accept="image/*" onchange="uploadIcon(this,'linkIcon')"><p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>点击上传图片</p><div class="upload-preview" id="linkIconPreview"></div></div><div class="icon-divider">— 或 —</div><input type="text" id="linkIcon" class="icon-url-input" placeholder="直接粘贴图片URL"></div></div><div class="form-group"><label>简介</label><input type="text" id="linkDesc" placeholder="简短描述"></div><div class="form-group"><label>排序</label><input type="number" id="linkSort" value="0"></div><div class="remember-row"><input type="checkbox" id="linkEnabled" checked><label for="linkEnabled">启用</label></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('linkModal')">取消</button><button class="btn btn-primary" onclick="saveLink()">保存</button></div></div></div>
@@ -184,6 +210,142 @@
     <script>
         const API='/api';
         let categories=[],links=[],IMG_API='',IMG_TOKEN='',fetchController=null;
+        // 服务端分页：当前页数据 + 总数
+        let categoriesTotal=0,linksTotal=0,allCategoriesForSelect=[];
+        // 分页状态
+        const PAGINATION={categories:{page:1,pageSize:10},links:{page:1,pageSize:10}};
+        const PAGE_SIZE_OPTIONS=[10,20,50,100];
+        // 加载状态：避免短时请求闪烁，仅对超过 threshold 的请求显示骨架
+        const LOAD_DELAY=150;
+        let loadTimers={categories:null,links:null};
+        // 搜索防抖
+        let searchTimers={categories:null,links:null};
+        // 用于取消进行中的请求
+        let fetchControllers={categories:null,links:null};
+
+        // 显示表格骨架加载（带延迟，避免快请求闪烁）
+        function showLoading(type){
+            clearTimeout(loadTimers[type]);
+            loadTimers[type]=setTimeout(()=>{
+                if(type==='categories')renderSkeleton('categoriesBody',8,8);
+                else renderSkeleton('linksBody',8,7);
+                document.getElementById(type+'Pagination').innerHTML='';
+            },LOAD_DELAY);
+        }
+        function hideLoading(type){clearTimeout(loadTimers[type]);}
+        // 渲染骨架行：rows 行数，cols 列数
+        function renderSkeleton(bodyId,rows,cols){
+            const html=Array.from({length:rows},()=>`<tr class="skeleton-row">${Array.from({length:cols},()=>'<td><div class="skeleton-line"></div></td>').join('')}</tr>`).join('');
+            document.getElementById(bodyId).innerHTML=html;
+        }
+
+        // 构造当前 tab 的查询参数
+        function buildQuery(type){
+            const state=PAGINATION[type];
+            const params=new URLSearchParams();
+            params.set('page',state.page);
+            params.set('page_size',state.pageSize);
+            params.set('_t',Date.now());
+            if(type==='categories'){
+                const search=document.getElementById('searchCategory').value.trim();
+                const status=document.getElementById('filterCategoryStatus').value;
+                const login=document.getElementById('filterCategoryLogin').value;
+                if(search)params.set('search',search);
+                if(status)params.set('enabled',status);
+                if(login)params.set('require_login',login);
+            }else{
+                const catId=document.getElementById('filterCategory').value;
+                const search=document.getElementById('searchLink').value.trim();
+                const status=document.getElementById('filterLinkStatus').value;
+                if(catId)params.set('category_id',catId);
+                if(search)params.set('search',search);
+                if(status)params.set('enabled',status);
+            }
+            return params;
+        }
+
+        // 按页加载分类（服务端分页）
+        async function loadCategories(){
+            if(fetchControllers.categories)fetchControllers.categories.abort();
+            fetchControllers.categories=new AbortController();
+            showLoading('categories');
+            try{
+                const res=await fetch(`${API}/categories?${buildQuery('categories').toString()}`,{headers:authHeaders(),signal:fetchControllers.categories.signal});
+                const data=await res.json();
+                categories=data.items||[];
+                categoriesTotal=data.total||0;
+                renderCategories();
+            }catch(e){if(e.name!=='AbortError')console.error('分类加载失败',e);}finally{hideLoading('categories');}
+        }
+        // 按页加载链接（服务端分页）
+        async function loadLinks(){
+            if(fetchControllers.links)fetchControllers.links.abort();
+            fetchControllers.links=new AbortController();
+            showLoading('links');
+            try{
+                const res=await fetch(`${API}/links?${buildQuery('links').toString()}`,{headers:authHeaders(),signal:fetchControllers.links.signal});
+                const data=await res.json();
+                links=data.items||[];
+                linksTotal=data.total||0;
+                renderLinks();
+            }catch(e){if(e.name!=='AbortError')console.error('链接加载失败',e);}finally{hideLoading('links');}
+        }
+        // 加载全部分类（用于下拉选择器，不分页）
+        async function loadAllCategoriesForSelect(){
+            try{
+                const res=await fetch(`${API}/categories?_t=${Date.now()}`,{headers:authHeaders()});
+                allCategoriesForSelect=await res.json()||[];
+                renderCategorySelects();
+            }catch(e){console.error('分类下拉加载失败',e);}
+        }
+
+        // 筛选变化：重置到第 1 页并请求（搜索词变化用防抖）
+        function onFilterChange(type){
+            PAGINATION[type].page=1;
+            if(type==='categories')loadCategories();else loadLinks();
+        }
+        function onSearchInput(type){
+            clearTimeout(searchTimers[type]);
+            searchTimers[type]=setTimeout(()=>onFilterChange(type),350);
+        }
+
+        // 分页：生成页码按钮序列（含省略号）
+        function buildPageNumbers(current,total){
+            if(total<=7)return Array.from({length:total},(_,i)=>i+1);
+            const pages=new Set([1,total,current,current-1,current+1,current-2,current+2].filter(p=>p>=1&&p<=total));
+            const sorted=[...pages].sort((a,b)=>a-b);
+            const result=[];
+            for(let i=0;i<sorted.length;i++){
+                if(i>0&&sorted[i]-sorted[i-1]>1)result.push('...');
+                result.push(sorted[i]);
+            }
+            return result;
+        }
+
+        // 分页：渲染分页控件（使用服务端返回的总数）
+        function renderPagination(type,filteredCount){
+            const state=PAGINATION[type];
+            const pageSize=state.pageSize;
+            const totalPages=Math.max(1,Math.ceil(filteredCount/pageSize));
+            if(state.page>totalPages)state.page=totalPages;
+            const current=state.page;
+            const container=document.getElementById(type+'Pagination');
+            if(filteredCount===0){container.innerHTML='<span class="pagination-info">暂无数据</span>';return;}
+            const startIdx=(current-1)*pageSize+1;
+            const endIdx=Math.min(current*pageSize,filteredCount);
+            const info=`<span class="pagination-info">第 ${startIdx}-${endIdx} 条，共 ${filteredCount} 条</span>`;
+            const sizeSelect=`<select class="page-size" onchange="changePageSize('${type}',this.value)">`+PAGE_SIZE_OPTIONS.map(s=>`<option value="${s}" ${s===pageSize?'selected':''}>${s} 条/页</option>`).join('')+`</select>`;
+            const btns=[];
+            btns.push(`<button class="page-btn" onclick="goToPage('${type}',${current-1})" ${current===1?'disabled':''}>&lt;</button>`);
+            buildPageNumbers(current,totalPages).forEach(p=>{
+                if(p==='...')btns.push('<span class="page-ellipsis">…</span>');
+                else btns.push(`<button class="page-btn${p===current?' active':''}" onclick="goToPage('${type}',${p})" ${p===current?'disabled':''}>${p}</button>`);
+            });
+            btns.push(`<button class="page-btn" onclick="goToPage('${type}',${current+1})" ${current===totalPages?'disabled':''}>&gt;</button>`);
+            container.innerHTML=info+`<div class="pagination-controls">${sizeSelect}${btns.join('')}</div>`;
+        }
+        function goToPage(type,page){const total=type==='categories'?categoriesTotal:linksTotal;const totalPages=Math.max(1,Math.ceil(total/PAGINATION[type].pageSize));if(page<1||page>totalPages)return;PAGINATION[type].page=page;if(type==='categories')loadCategories();else loadLinks();}
+        function changePageSize(type,size){PAGINATION[type].pageSize=parseInt(size);PAGINATION[type].page=1;if(type==='categories')loadCategories();else loadLinks();}
 
         // Token 管理
         function getToken(){return localStorage.getItem('admin_token')||sessionStorage.getItem('admin_token')||'';}
@@ -206,26 +368,52 @@
         async function login(){const pwd=document.getElementById('password').value;const remember=document.getElementById('rememberMe').checked;try{const res=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd,remember_me:remember})});const data=await res.json();if(data.success&&data.token){storeToken(data.token,remember);sessionStorage.setItem('admin_logged','true');showAdmin();}else alert('密码错误');}catch(e){alert('登录失败');}}
         function logout(){clearToken();location.reload();}
         function showAdmin(){document.getElementById('loginContainer').style.display='none';document.getElementById('adminContainer').style.display='block';loadData();}
+        // 加载所有数据：分类和链接独立按页加载，下拉分类全量加载
+        function loadData(){loadCategories();loadLinks();loadAllCategoriesForSelect();}
+        async function saveCategory(){const id=document.getElementById('categoryId').value;const data={name:document.getElementById('categoryName').value,icon:document.getElementById('categoryIcon').value,slug:document.getElementById('categorySlug').value,sort:parseInt(document.getElementById('categorySort').value)||0,require_login:document.getElementById('categoryRequireLogin').checked,enabled:document.getElementById('categoryEnabled').checked};await fetch(id?`${API}/categories/${id}`:`${API}/categories`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('categoryModal');loadCategories();loadAllCategoriesForSelect();}
+        async function deleteCategory(id){if(!confirm('确定删除？相关链接也会被删除'))return;await fetch(`${API}/categories/${id}`,{method:'DELETE',headers:authHeaders()});loadCategories();loadAllCategoriesForSelect();if(document.getElementById('linksTab').style.display!=='none')loadLinks();}
         function showTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');event.target.classList.add('active');document.getElementById(tab+'Tab').style.display='block';}
-        async function loadData(){try{const t=Date.now();const[catRes,linkRes]=await Promise.all([fetch(`${API}/categories?_t=${t}`,{headers:authHeaders()}),fetch(`${API}/links?_t=${t}`,{headers:authHeaders()})]);categories=await catRes.json()||[];links=await linkRes.json()||[];renderCategories();renderLinks();renderCategorySelects();}catch(e){console.error('加载失败',e);}}
+        async function saveCategory(){const id=document.getElementById('categoryId').value;const data={name:document.getElementById('categoryName').value,icon:document.getElementById('categoryIcon').value,slug:document.getElementById('categorySlug').value,sort:parseInt(document.getElementById('categorySort').value)||0,require_login:document.getElementById('categoryRequireLogin').checked,enabled:document.getElementById('categoryEnabled').checked};await fetch(id?`${API}/categories/${id}`:`${API}/categories`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('categoryModal');loadCategories();loadAllCategoriesForSelect();}
         function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-        function renderCategories(){const query=document.getElementById('searchCategory').value.toLowerCase();const status=document.getElementById('filterCategoryStatus').value;const login=document.getElementById('filterCategoryLogin').value;const filtered=categories.filter(c=>{if(query&&!c.name.toLowerCase().includes(query)&&!(c.slug||'').toLowerCase().includes(query))return false;if(status==='1'&&!c.enabled)return false;if(status==='0'&&c.enabled)return false;if(login==='1'&&!c.require_login)return false;if(login==='0'&&c.require_login)return false;return true;});document.getElementById('categoriesBody').innerHTML=filtered.map(c=>`<tr class="${c.enabled?'':'disabled-row'}"><td>${c.id}</td><td class="icon-cell">${c.icon?`<img src="${escapeHtml(c.icon)}" onerror="this.style.display='none'">`:'—'}</td><td title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</td><td title="${escapeHtml(c.slug)}">${escapeHtml(c.slug)}</td><td class="icon-cell">${c.require_login?'<span class="require-login-badge">是</span>':'<span class="public-badge">否</span>'}</td><td>${c.sort}</td><td class="icon-cell"><span class="toggle-switch${c.enabled?' active':''}" data-type="category" data-id="${c.id}" data-enabled="${c.enabled}"><span class="toggle-slider"></span></span></td><td class="actions-cell"><div class="actions"><button class="btn-icon btn-icon-edit" onclick="editCategory(${c.id})" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon btn-icon-danger" onclick="deleteCategory(${c.id})" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td></tr>`).join('');}
-        function renderLinks(){const filterId=document.getElementById('filterCategory').value;const query=document.getElementById('searchLink').value.toLowerCase();const status=document.getElementById('filterLinkStatus').value;const filtered=links.filter(l=>{if(filterId&&l.category_id!=filterId)return false;if(query&&!l.name.toLowerCase().includes(query)&&!(l.url||'').toLowerCase().includes(query)&&!(l.desc||'').toLowerCase().includes(query))return false;if(status==='1'&&!l.enabled)return false;if(status==='0'&&l.enabled)return false;return true;});document.getElementById('linksBody').innerHTML=filtered.map(l=>{const cat=categories.find(c=>c.id===l.category_id);return`<tr class="${l.enabled?'':'disabled-row'}"><td>${l.id}</td><td class="icon-cell">${l.icon?`<img src="${escapeHtml(l.icon)}" onerror="this.style.display='none'">`:'—'}</td><td title="${escapeHtml(l.name)}">${escapeHtml(l.name)}</td><td title="${escapeHtml(l.desc)}">${escapeHtml(l.desc||'')}</td><td>${escapeHtml(cat?.name||'—')}</td><td>${l.sort}</td><td class="icon-cell"><span class="toggle-switch${l.enabled?' active':''}" data-type="link" data-id="${l.id}" data-enabled="${l.enabled}"><span class="toggle-slider"></span></span></td><td class="actions-cell"><div class="actions"><button class="btn-icon btn-icon-edit" onclick="editLink(${l.id})" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon btn-icon-danger" onclick="deleteLink(${l.id})" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td></tr>`;}).join('');}
-        function renderCategorySelects(){const opts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');document.getElementById('filterCategory').innerHTML='<option value="">全部分类</option>'+opts;document.getElementById('linkCategory').innerHTML=opts;document.getElementById('filterCategory').onchange=renderLinks;}
+        function renderCategories(){document.getElementById('categoriesBody').innerHTML=categories.map(c=>`<tr class="${c.enabled?'':'disabled-row'}"><td>${c.id}</td><td class="icon-cell">${c.icon?`<img src="${escapeHtml(c.icon)}" onerror="this.style.display='none'">`:'—'}</td><td title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</td><td title="${escapeHtml(c.slug)}">${escapeHtml(c.slug)}</td><td class="icon-cell">${c.require_login?'<span class="require-login-badge">是</span>':'<span class="public-badge">否</span>'}</td><td>${c.sort}</td><td class="icon-cell"><span class="toggle-switch${c.enabled?' active':''}" data-type="category" data-id="${c.id}" data-enabled="${c.enabled}"><span class="toggle-slider"></span></span></td><td class="actions-cell"><div class="actions"><button class="btn-icon btn-icon-edit" onclick="editCategory(${c.id})" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon btn-icon-danger" onclick="deleteCategory(${c.id})" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td></tr>`).join('');renderPagination('categories',categoriesTotal);}
+        function renderLinks(){document.getElementById('linksBody').innerHTML=links.map(l=>{const catName=l.category_name||(allCategoriesForSelect.find(c=>c.id===l.category_id)?.name)||'—';return`<tr class="${l.enabled?'':'disabled-row'}"><td>${l.id}</td><td class="icon-cell">${l.icon?`<img src="${escapeHtml(l.icon)}" onerror="this.style.display='none'">`:'—'}</td><td title="${escapeHtml(l.name)}">${escapeHtml(l.name)}</td><td title="${escapeHtml(l.desc)}">${escapeHtml(l.desc||'')}</td><td>${escapeHtml(catName)}</td><td>${l.sort}</td><td class="icon-cell"><span class="toggle-switch${l.enabled?' active':''}" data-type="link" data-id="${l.id}" data-enabled="${l.enabled}"><span class="toggle-slider"></span></span></td><td class="actions-cell"><div class="actions"><button class="btn-icon btn-icon-edit" onclick="editLink(${l.id})" title="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon btn-icon-danger" onclick="deleteLink(${l.id})" title="删除"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td></tr>`;}).join('');renderPagination('links',linksTotal);}
+        function renderCategorySelects(){const opts=allCategoriesForSelect.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');document.getElementById('filterCategory').innerHTML='<option value="">全部分类</option>'+opts;document.getElementById('linkCategory').innerHTML=opts;}
         function showCategoryModal(id=null){document.getElementById('categoryModalTitle').textContent=id?'编辑分类':'添加分类';document.getElementById('categoryId').value=id||'';document.getElementById('categoryIconPreview').innerHTML='';if(id){const c=categories.find(x=>x.id===id);document.getElementById('categoryName').value=c.name;document.getElementById('categoryIcon').value=c.icon||'';document.getElementById('categorySlug').value=c.slug;document.getElementById('categorySort').value=c.sort;document.getElementById('categoryRequireLogin').checked=!!c.require_login;document.getElementById('categoryEnabled').checked=!!c.enabled;if(c.icon)document.getElementById('categoryIconPreview').innerHTML=`<img src="${c.icon}">`;}else{['categoryName','categoryIcon','categorySlug'].forEach(x=>document.getElementById(x).value='');document.getElementById('categorySort').value='0';document.getElementById('categoryRequireLogin').checked=false;document.getElementById('categoryEnabled').checked=true;}document.getElementById('categoryModal').classList.add('show');}
         function editCategory(id){showCategoryModal(id);}
         async function saveCategory(){const id=document.getElementById('categoryId').value;const data={name:document.getElementById('categoryName').value,icon:document.getElementById('categoryIcon').value,slug:document.getElementById('categorySlug').value,sort:parseInt(document.getElementById('categorySort').value)||0,require_login:document.getElementById('categoryRequireLogin').checked,enabled:document.getElementById('categoryEnabled').checked};await fetch(id?`${API}/categories/${id}`:`${API}/categories`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('categoryModal');loadData();}
         async function deleteCategory(id){if(!confirm('确定删除？相关链接也会被删除'))return;await fetch(`${API}/categories/${id}`,{method:'DELETE',headers:authHeaders()});loadData();}
         function showLinkModal(id=null){document.getElementById('linkModalTitle').textContent=id?'编辑链接':'添加链接';document.getElementById('linkId').value=id||'';document.getElementById('linkIconPreview').innerHTML='';if(id){const l=links.find(x=>x.id===id);document.getElementById('linkCategory').value=l.category_id;document.getElementById('linkName').value=l.name;document.getElementById('linkUrl').value=l.url;document.getElementById('linkIcon').value=l.icon||'';document.getElementById('linkDesc').value=l.desc||'';document.getElementById('linkSort').value=l.sort;document.getElementById('linkEnabled').checked=!!l.enabled;if(l.icon)document.getElementById('linkIconPreview').innerHTML=`<img src="${l.icon}">`;}else{['linkName','linkUrl','linkIcon','linkDesc'].forEach(x=>document.getElementById(x).value='');document.getElementById('linkSort').value='0';document.getElementById('linkEnabled').checked=true;}document.getElementById('linkModal').classList.add('show');}
         function editLink(id){showLinkModal(id);}
-        async function saveLink(){const id=document.getElementById('linkId').value;const data={category_id:parseInt(document.getElementById('linkCategory').value),name:document.getElementById('linkName').value,url:document.getElementById('linkUrl').value,icon:document.getElementById('linkIcon').value,desc:document.getElementById('linkDesc').value,sort:parseInt(document.getElementById('linkSort').value)||0,enabled:document.getElementById('linkEnabled').checked};await fetch(id?`${API}/links/${id}`:`${API}/links`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('linkModal');loadData();}
-        async function deleteLink(id){if(!confirm('确定删除？'))return;await fetch(`${API}/links/${id}`,{method:'DELETE',headers:authHeaders()});loadData();}
+        async function saveLink(){const id=document.getElementById('linkId').value;const data={category_id:parseInt(document.getElementById('linkCategory').value),name:document.getElementById('linkName').value,url:document.getElementById('linkUrl').value,icon:document.getElementById('linkIcon').value,desc:document.getElementById('linkDesc').value,sort:parseInt(document.getElementById('linkSort').value)||0,enabled:document.getElementById('linkEnabled').checked};await fetch(id?`${API}/links/${id}`:`${API}/links`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('linkModal');loadLinks();}
+        async function deleteLink(id){if(!confirm('确定删除？'))return;await fetch(`${API}/links/${id}`,{method:'DELETE',headers:authHeaders()});loadLinks();}
         function closeModal(id){document.getElementById(id).classList.remove('show');if(id==='linkModal'){if(fetchController)fetchController.abort();const btn=document.querySelector('.btn-fetch-icon');if(btn)btn.classList.remove('fetching');}}
         document.addEventListener('click',function(e){const sw=e.target.closest('.toggle-switch');if(!sw||sw.dataset.busy==='1')return;e.preventDefault();const wasActive=sw.classList.contains('active');const newState=!wasActive;sw.dataset.busy='1';sw.classList.toggle('active',newState);sw.dataset.enabled=newState;const row=sw.closest('tr');if(row)row.classList.toggle('disabled-row',!newState);const type=sw.dataset.type,id=parseInt(sw.dataset.id);fetch(`${API}/${type==='category'?'categories':'links'}/${id}`,{method:'PATCH',headers:authHeaders(),body:JSON.stringify({enabled:newState})}).then(res=>{if(!res.ok)throw new Error('fail');const arr=type==='category'?categories:links;const item=arr.find(x=>x.id===id);if(item)item.enabled=newState;}).catch(()=>{sw.classList.toggle('active',wasActive);sw.dataset.enabled=wasActive;if(row)row.classList.toggle('disabled-row',!wasActive);}).finally(()=>{delete sw.dataset.busy;});});
         if(getToken())showAdmin();
         else document.getElementById('loginContainer').style.display='flex';
         document.getElementById('password').onkeypress=e=>{if(e.key==='Enter')login();};
         window.addEventListener('pageshow',function(e){if(e.persisted&&getToken())loadData();});
+
+        // 用 addEventListener 绑定搜索和筛选事件（比内联属性更可靠）
+        function bindFilterEvents(){
+            const catSearch=document.getElementById('searchCategory');
+            const linkSearch=document.getElementById('searchLink');
+            const catStatus=document.getElementById('filterCategoryStatus');
+            const catLogin=document.getElementById('filterCategoryLogin');
+            const filterCat=document.getElementById('filterCategory');
+            const linkStatus=document.getElementById('filterLinkStatus');
+            // 搜索框：input 事件 + 防抖
+            if(catSearch)catSearch.addEventListener('input',()=>onSearchInput('categories'));
+            if(linkSearch)linkSearch.addEventListener('input',()=>onSearchInput('links'));
+            // 回车立即搜索
+            if(catSearch)catSearch.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();onFilterChange('categories');}});
+            if(linkSearch)linkSearch.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();onFilterChange('links');}});
+            // 下拉筛选：change 事件
+            if(catStatus)catStatus.addEventListener('change',()=>onFilterChange('categories'));
+            if(catLogin)catLogin.addEventListener('change',()=>onFilterChange('categories'));
+            if(filterCat)filterCat.addEventListener('change',()=>onFilterChange('links'));
+            if(linkStatus)linkStatus.addEventListener('change',()=>onFilterChange('links'));
+        }
+        bindFilterEvents();
     </script>
 </body>
 </html>

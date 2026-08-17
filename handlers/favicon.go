@@ -1,16 +1,23 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"effihub/config"
 )
+
+// base64 超过此长度（字节）则自动上传到图床，避免数据库存储过大
+const maxBase64Len = 32 * 1024 // 32KB
 
 // 获取网站信息（图标 + 标题 + 描述）
 func FaviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +237,7 @@ func resolveURL(href string, base *url.URL) string {
 	return resolved.String()
 }
 
-// 下载图标并转为 base64 data URL
+// 下载图标并转为 base64 data URL，超长时自动上传到图床返回 URL
 func downloadAndEncode(client *http.Client, iconURL string) string {
 	req, err := http.NewRequest("GET", iconURL, nil)
 	if err != nil {
@@ -270,5 +277,100 @@ func downloadAndEncode(client *http.Client, iconURL string) string {
 	}
 
 	base64Data := base64.StdEncoding.EncodeToString(body)
-	return fmt.Sprintf("data:%s;base64,%s", contentType, base64Data)
+	dataURL := fmt.Sprintf("data:%s;base64,%s", contentType, base64Data)
+
+	// 未超长，直接返回 data URL
+	if len(dataURL) <= maxBase64Len {
+		return dataURL
+	}
+
+	// 超长则尝试上传到图床
+	if uploaded := uploadToImageHost(body, contentType); uploaded != "" {
+		return uploaded
+	}
+
+	// 图床失败则降级返回 data URL（可能存储失败，但至少能返回）
+	return dataURL
+}
+
+// 上传图片到图床，成功返回图床 URL，失败返回空字符串
+func uploadToImageHost(imageData []byte, contentType string) string {
+	api := config.GetImageUploadAPI()
+	token := config.GetImageUploadToken()
+	if api == "" || token == "" {
+		return ""
+	}
+
+	// 构造 multipart 表单
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	// token 字段
+	if err := writer.WriteField("token", token); err != nil {
+		return ""
+	}
+
+	// image 字段
+	part, err := writer.CreateFormFile("image", "icon"+extFromContentType(contentType))
+	if err != nil {
+		return ""
+	}
+	if _, err := part.Write(imageData); err != nil {
+		return ""
+	}
+	writer.Close()
+
+	req, err := http.NewRequest("POST", api, &buf)
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	httpClient := &http.Client{Timeout: 15 * time.Second}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return ""
+	}
+
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+	if err != nil {
+		return ""
+	}
+
+	var result struct {
+		Result string `json:"result"`
+		URL    string `json:"url"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return ""
+	}
+	if result.Result == "success" && result.URL != "" {
+		return result.URL
+	}
+	return ""
+}
+
+// 根据 ContentType 获取文件扩展名
+func extFromContentType(contentType string) string {
+	switch contentType {
+	case "image/png":
+		return ".png"
+	case "image/jpeg":
+		return ".jpg"
+	case "image/gif":
+		return ".gif"
+	case "image/webp":
+		return ".webp"
+	case "image/svg+xml":
+		return ".svg"
+	case "image/x-icon":
+		return ".ico"
+	default:
+		return ".bin"
+	}
 }

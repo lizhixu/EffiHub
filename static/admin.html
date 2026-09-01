@@ -30,7 +30,7 @@
             --titlebar: #e8e8e8;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif; background: var(--bg-window); color: var(--text-primary); min-height: 100vh; font-size: 13px; line-height: 1.4; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif; background: var(--bg-window); color: var(--text-primary); height: 100vh; overflow: hidden; font-size: 13px; line-height: 1.4; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         
         /* Login Page */
         .login-container { display: none; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-window); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 24px 24px; position: relative; }
@@ -60,8 +60,8 @@
         .login-theme-btn { position: absolute; top: 12px; right: 12px; }
         
         /* Admin Main */
-        .admin-container { display: none; padding: 0 20px 20px; max-width: 1200px; margin: 0 auto; }
-        .admin-header { position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 20px; background: var(--bg-sidebar); border-radius: 0 0 8px 8px; border: 1px solid var(--border); border-top: none; }
+        .admin-container { display: none; height: 100vh; padding: 0 20px 20px; max-width: 1200px; margin: 0 auto; flex-direction: column; }
+        .admin-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 20px; background: var(--bg-sidebar); border-radius: 0 0 8px 8px; border: 1px solid var(--border); border-top: none; }
         .header-logo { display: flex; align-items: center; gap: 12px; }
         .header-logo img { height: 28px; width: auto; }
         .header-logo span { font-size: 14px; font-weight: 500; color: var(--text-title); }
@@ -77,22 +77,24 @@
         .theme-toggle svg { width: 16px; height: 16px; }
         
         /* Tabs & Toolbar */
-        .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--bg-sidebar); padding: 4px; border-radius: 8px; display: inline-flex; border: 1px solid var(--border); }
+        .tabs { flex-shrink: 0; display: flex; gap: 4px; margin-bottom: 16px; background: var(--bg-sidebar); padding: 4px; border-radius: 8px; display: inline-flex; border: 1px solid var(--border); }
         .tab { padding: 6px 16px; background: transparent; border: none; color: var(--text-secondary); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
         .tab.active { background: var(--bg-hover); color: var(--text-title); }
         .tab:hover:not(.active) { color: var(--text-primary); }
-        .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
+        .toolbar { flex-shrink: 0; display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
         .toolbar select { padding: 6px 10px; background: var(--bg-sidebar); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; transition: border-color 0.15s; }
         .toolbar select:focus { border-color: var(--accent); }
+        .tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
         .toolbar input[type="text"] { padding: 6px 10px; background: var(--bg-sidebar); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; transition: border-color 0.15s; width: 200px; }
         .toolbar input[type="text"]:focus { border-color: var(--accent); }
         .toolbar input[type="text"]::placeholder { color: var(--text-secondary); }
         
         /* Data Table */
-        .data-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-sidebar); }
+        .data-table-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-sidebar); }
+        .table-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto; }
         .data-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; font-size: 12px; }
-        .data-table th { background: var(--titlebar); color: var(--text-secondary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-table th { background: var(--titlebar); color: var(--text-secondary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 2; }
         .data-table tr:last-child td { border-bottom: none; }
         .data-table td { color: var(--text-primary); }
         .data-table .actions { display: flex; gap: 4px; white-space: nowrap; }
@@ -213,7 +215,7 @@
         // 服务端分页：当前页数据 + 总数
         let categoriesTotal=0,linksTotal=0,allCategoriesForSelect=[];
         // 分页状态
-        const PAGINATION={categories:{page:1,pageSize:10},links:{page:1,pageSize:10}};
+        const PAGINATION={categories:{page:1,pageSize:20},links:{page:1,pageSize:20}};
         const PAGE_SIZE_OPTIONS=[10,20,50,100];
         // 加载状态：避免短时请求闪烁，仅对超过 threshold 的请求显示骨架
         const LOAD_DELAY=150;
@@ -367,7 +369,7 @@
         function togglePassword(){const pwd=document.getElementById('password');const btn=document.getElementById('togglePwdBtn');if(pwd.type==='password'){pwd.type='text';btn.innerHTML='<svg class="icon-eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';}else{pwd.type='password';btn.innerHTML='<svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';}}
         async function login(){const pwd=document.getElementById('password').value;const remember=document.getElementById('rememberMe').checked;try{const res=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd,remember_me:remember})});const data=await res.json();if(data.success&&data.token){storeToken(data.token,remember);sessionStorage.setItem('admin_logged','true');showAdmin();}else alert('密码错误');}catch(e){alert('登录失败');}}
         function logout(){clearToken();location.reload();}
-        function showAdmin(){document.getElementById('loginContainer').style.display='none';document.getElementById('adminContainer').style.display='block';loadData();}
+        function showAdmin(){document.getElementById('loginContainer').style.display='none';document.getElementById('adminContainer').style.display='flex';loadData();}
         // 加载所有数据：分类和链接独立按页加载，下拉分类全量加载
         function loadData(){loadCategories();loadLinks();loadAllCategoriesForSelect();}
         async function saveCategory(){const id=document.getElementById('categoryId').value;const data={name:document.getElementById('categoryName').value,icon:document.getElementById('categoryIcon').value,slug:document.getElementById('categorySlug').value,sort:parseInt(document.getElementById('categorySort').value)||0,require_login:document.getElementById('categoryRequireLogin').checked,enabled:document.getElementById('categoryEnabled').checked};await fetch(id?`${API}/categories/${id}`:`${API}/categories`,{method:id?'PUT':'POST',headers:authHeaders(),body:JSON.stringify(data)});closeModal('categoryModal');loadCategories();loadAllCategoriesForSelect();}

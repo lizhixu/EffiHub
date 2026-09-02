@@ -11,6 +11,12 @@ import (
 	"effihub/models"
 )
 
+// jsonError 输出结构化错误信息，返回给前端的 message 字段
+func jsonError(w http.ResponseWriter, message string, status int) {
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
+
 // 获取所有分类
 func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -132,10 +138,16 @@ func CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var c models.Category
 		json.NewDecoder(r.Body).Decode(&c)
+		icon, err := normalizeIcon(c.Icon)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		c.Icon = icon
 		result, err := config.DB.Exec("INSERT INTO categories (name, icon, slug, sort, require_login, enabled) VALUES (?, ?, ?, ?, ?, ?)",
 			c.Name, c.Icon, c.Slug, c.Sort, c.RequireLogin, c.Enabled)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			jsonError(w, "保存分类失败: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		id, _ := result.LastInsertId()
@@ -272,11 +284,17 @@ func LinksHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var l models.Link
 		json.NewDecoder(r.Body).Decode(&l)
+		icon, err := normalizeIcon(l.Icon)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		l.Icon = icon
 		result, err := config.DB.Exec(
 			"INSERT INTO links (category_id, name, url, icon, description, sort, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			l.CategoryID, l.Name, l.URL, l.Icon, l.Desc, l.Sort, l.Enabled)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			jsonError(w, "保存链接失败: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		id, _ := result.LastInsertId()
@@ -313,11 +331,17 @@ func LinkHandler(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		var l models.Link
 		json.NewDecoder(r.Body).Decode(&l)
-		_, err := config.DB.Exec(
+		icon, err := normalizeIcon(l.Icon)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		l.Icon = icon
+		_, err = config.DB.Exec(
 			"UPDATE links SET category_id=?, name=?, url=?, icon=?, description=?, sort=?, enabled=? WHERE id=?",
 			l.CategoryID, l.Name, l.URL, l.Icon, l.Desc, l.Sort, l.Enabled, id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			jsonError(w, "保存链接失败: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		l.ID = id
@@ -384,11 +408,17 @@ func CategoryHandler(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		var c models.Category
 		json.NewDecoder(r.Body).Decode(&c)
-		_, err := config.DB.Exec(
+		icon, err := normalizeIcon(c.Icon)
+		if err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		c.Icon = icon
+		_, err = config.DB.Exec(
 			"UPDATE categories SET name=?, icon=?, slug=?, sort=?, require_login=?, enabled=? WHERE id=?",
 			c.Name, c.Icon, c.Slug, c.Sort, c.RequireLogin, c.Enabled, id)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			jsonError(w, "保存分类失败: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		c.ID = id

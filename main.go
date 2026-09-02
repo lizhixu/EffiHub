@@ -49,6 +49,7 @@ func main() {
 	mux.HandleFunc("/api/links", handlers.LinksHandler)
 	mux.HandleFunc("/api/links/", handlers.LinkHandler)
 	mux.HandleFunc("/api/favicon", handlers.FaviconHandler)
+	mux.HandleFunc("/api/upload/icon", handlers.UploadIconHandler)
 
 	// 静态文件
 	mux.Handle("/", http.FileServer(http.Dir("./static/")))

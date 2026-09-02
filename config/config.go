@@ -21,7 +21,7 @@ func GetImageUploadAPI() string {
 	if api := os.Getenv("IMAGE_UPLOAD_API"); api != "" {
 		return api
 	}
-	return "https://img.lizhixu.cn/api/index.php"
+	return "https://img.lizhixu.cn/api/upload/token"
 }
 
 func GetJWTSecret() string {

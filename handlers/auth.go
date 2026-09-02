@@ -115,12 +115,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// 获取图片上传配置
+// 获取图片上传配置（token 已不再下发浏览器：前端上传统一走 /api/upload/icon 由后端转发）
 func UploadConfigHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(map[string]string{
-		"api":   config.GetImageUploadAPI(),
-		"token": config.GetImageUploadToken(),
+		"api": config.GetImageUploadAPI(),
 	})
 }

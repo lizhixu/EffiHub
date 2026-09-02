@@ -79,13 +79,15 @@ func FaviconHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 下载图标并转 base64
+	// 下载图标并转 base64；失败（过大且图床不可用）时降级为图标直链
 	if iconURL != "" {
 		dataURL := downloadAndEncode(client, iconURL)
 		if dataURL != "" {
 			result["icon"] = dataURL
-			result["icon_url"] = iconURL
+		} else {
+			result["icon"] = iconURL
 		}
+		result["icon_url"] = iconURL
 	}
 
 	if len(result) == 0 {
@@ -289,8 +291,85 @@ func downloadAndEncode(client *http.Client, iconURL string) string {
 		return uploaded
 	}
 
-	// 图床失败则降级返回 data URL（可能存储失败，但至少能返回）
-	return dataURL
+	// 图床失败不能返回超大 base64：超过 TEXT 列上限会导致入库失败（Error 1406）
+	return ""
+}
+
+// UploadIconHandler 后台手动上传图标：接收 multipart 文件，转发到图床，
+// 返回图床 URL。前端不再直连图床（图床无 CORS 头，且 token 不应暴露给浏览器）
+func UploadIconHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodPost {
+		jsonError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 限制 10MB，与后台使用场景匹配
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		jsonError(w, "文件过大或表单无效", http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		jsonError(w, "缺少图片文件（字段名 image）", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(io.LimitReader(file, 10<<20))
+	if err != nil {
+		jsonError(w, "读取文件失败", http.StatusBadRequest)
+		return
+	}
+	if len(data) == 0 {
+		jsonError(w, "文件为空", http.StatusBadRequest)
+		return
+	}
+
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = http.DetectContentType(data)
+	}
+	if !strings.HasPrefix(contentType, "image/") {
+		jsonError(w, "仅支持图片文件", http.StatusBadRequest)
+		return
+	}
+
+	url := uploadToImageHost(data, contentType)
+	if url == "" {
+		jsonError(w, "图床上传失败，请检查图床服务及 API Token 配置", http.StatusBadGateway)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"result": "success", "url": url})
+}
+
+// normalizeIcon 保证 icon 不超过数据库 TEXT 列上限（65535 字节）：
+// 超长的 base64 data URL 自动转存图床换取 URL；转存失败或格式无效则返回错误，
+// 避免入库时报 "Data too long for column 'icon'"（Error 1406）
+func normalizeIcon(icon string) (string, error) {
+	if len(icon) <= maxBase64Len {
+		return icon, nil
+	}
+	if !strings.HasPrefix(icon, "data:") {
+		return "", fmt.Errorf("图标数据过大（%dKB），请改为填写图片 URL 或重新上传", len(icon)/1024)
+	}
+	idx := strings.Index(icon, ";base64,")
+	if idx < 0 {
+		return "", fmt.Errorf("图标 base64 数据格式无效")
+	}
+	contentType := icon[len("data:"):idx]
+	data, err := base64.StdEncoding.DecodeString(icon[idx+len(";base64,"):])
+	if err != nil {
+		return "", fmt.Errorf("图标 base64 数据无效")
+	}
+	uploaded := uploadToImageHost(data, contentType)
+	if uploaded == "" {
+		return "", fmt.Errorf("图标过大且转存图床失败，请直接填写图片 URL")
+	}
+	return uploaded, nil
 }
 
 // 上传图片到图床，成功返回图床 URL，失败返回空字符串
@@ -310,7 +389,7 @@ func uploadToImageHost(imageData []byte, contentType string) string {
 		return ""
 	}
 
-	// image 字段
+	// image 字段（图床外部 Token 上传接口格式：POST /api/upload/token，字段 image + token）
 	part, err := writer.CreateFormFile("image", "icon"+extFromContentType(contentType))
 	if err != nil {
 		return ""
